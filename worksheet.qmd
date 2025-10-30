@@ -25,6 +25,12 @@ energy_sources <- c("Solar (MWh)", "Wind (GWh)", "Coal (MWh)", "Hydro (kWh)")
 a.  Use str_detect() to identify all energy sources that contain the substring "Wind" or "Hydro" (hint: use the \| operator in regex).
 
 ```{r}
+energy_sources <- c("Solar (MWh)", "Wind (GWh)", "Coal (MWh)", "Hydro (kWh)")
+
+# Detect energy sources containing "Wind" or "Hydro"
+wind_or_hydro <- str_detect(energy_sources, "Wind|Hydro")
+
+wind_or_hydro
 
 ```
 
