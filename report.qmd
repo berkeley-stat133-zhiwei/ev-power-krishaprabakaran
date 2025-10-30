@@ -8,27 +8,95 @@ format: typst
 ## **Part 0: libraries**
 
 ```{r}
-
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
 ```
 
 ## **Part 1:** **Defining Research Question**
 
-Chosen Question:
+Chosen Question: How has the percentage of renewable energy use changed from 2021 to 2023 across U.S. states?
 
 ## **Part 2: Data Preparation and Cleaning**
 
 ```{r}
+renew21 <- read_csv("data/renew-use-2021.csv")
+renew22 <- read_csv("data/renew-use-2022.csv")
+renew23 <- read_csv("data/renew-use-2023.csv")
+
+total21 <- read_csv("data/total-use-2021.csv")
+total22 <- read_csv("data/total-use-2022.csv")
+total23 <- read_csv("data/total-use-2023.csv")
+
+clean_renew <- function(df) {
+  df %>%
+    rename(State = 1, Renewable_Energy = ncol(.)) %>%
+    mutate(
+      Renewable_Energy = if (is.character(Renewable_Energy)) parse_number(Renewable_Energy) else Renewable_Energy
+    )
+}
+
+clean_total <- function(df) {
+  df %>%
+    rename(State = 1, Total_Energy = ncol(.)) %>%
+    mutate(
+      Total_Energy = if (is.character(Total_Energy)) parse_number(Total_Energy) else Total_Energy
+    )
+}
+
+renew21 <- clean_renew(renew21)
+renew22 <- clean_renew(renew22)
+renew23 <- clean_renew(renew23)
+
+total21 <- clean_total(total21)
+total22 <- clean_total(total22)
+total23 <- clean_total(total23)
+
+
+head(renew21)
+head(total21)
 
 ```
 
 ## **Part 3: Joining / Pivoting Datasets for Analysis**
 
 ```{r}
+energy21 <- left_join(renew21, total21, by = "State")
 
+energy21 <- energy21 %>%
+  mutate(
+    Year = 2021,
+    Renew_Share = (Renewable_Energy / Total_Energy) * 100
+  )
+
+head(energy21)
 ```
 
 ## **Part 4: Mapping Visualization**
 
 ```{r}
+
+# Get US states map data
+us_states <- map_data("state")
+
+# Make sure your state names are lowercase to match map data
+energy21 <- energy21 %>%
+  mutate(State_lower = tolower(State))
+
+# Join map data with energy data
+map_data21 <- us_states %>%
+  left_join(energy21, by = c("region" = "State_lower"))
+
+# Plot the map
+ggplot(map_data21, aes(x = long, y = lat, group = group, fill = Renew_Share)) +
+  geom_polygon(color = "white") +
+  coord_fixed(1.3) +
+  scale_fill_viridis_c(option = "plasma", na.value = "grey90", name = "Renewable Share (%)") +
+  labs(title = "Renewable Energy Share by State - 2021") +
+  theme_minimal() +
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_blank())
 
 ```
